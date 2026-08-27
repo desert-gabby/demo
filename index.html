@@ -3,109 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aurora — Demo Site</title>
+  <title>Pulse Counter</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --text: #f2f3f5;
+      --muted: #9a9fac;
+      --accent: #ff5d73;
+      --accent-soft: rgba(255, 93, 115, 0.16);
+      --ring: rgba(255, 93, 115, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 20%, #1b1f28, var(--bg) 60%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 2.75rem 3rem;
+      width: min(360px, 90vw);
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin: 0 0 0.5rem;
+    }
+
+    h1 {
+      margin: 0 0 1.75rem;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .count {
+      font-size: 4.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin: 0 0 1.75rem;
+      font-variant-numeric: tabular-nums;
+      transition: transform 0.12s ease;
+    }
+
+    .count.pulse { transform: scale(1.12); }
+
+    .btn-row {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: center;
+    }
+
+    button {
+      font-family: inherit;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+    }
+
+    .tap {
+      flex: 1;
+      padding: 0.95rem 1.2rem;
+      font-size: 1rem;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 10px 24px var(--accent-soft);
+    }
+
+    .tap:hover { transform: translateY(-2px); }
+    .tap:active { transform: translateY(0) scale(0.97); }
+
+    .reset {
+      padding: 0.95rem 1.1rem;
+      font-size: 0.85rem;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .reset:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.28); }
+
+    .hint {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    kbd {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.1em 0.45em;
+      border-radius: 5px;
+      font-size: 0.8em;
+    }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <nav class="nav container">
-      <a class="brand" href="#top">
-        <span class="brand-mark">✦</span> Aurora
-      </a>
-      <ul class="nav-links">
-        <li><a href="#features">Features</a></li>
-        <li><a href="#how">How it works</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
-    </nav>
-  </header>
-
-  <main id="top">
-    <section class="hero container">
-      <p class="eyebrow">Now in demo preview</p>
-      <h1>A small idea,<br />presented beautifully.</h1>
-      <p class="hero-sub">
-        Aurora is a placeholder product page built to show a clean, modern
-        single-page layout — hero, features, process, and contact — all in
-        one lightweight static site.
-      </p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="#contact">Get started</a>
-        <a class="btn btn-ghost" href="#features">See features</a>
-      </div>
-    </section>
-
-    <section id="features" class="features container">
-      <h2>Why teams pick Aurora</h2>
-      <p class="section-sub">Three reasons this demo page exists.</p>
-      <div class="feature-grid">
-        <article class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3>Fast by default</h3>
-          <p>No frameworks, no build step — just HTML, CSS, and a touch of JavaScript. Loads instantly.</p>
-        </article>
-        <article class="feature-card">
-          <div class="feature-icon">🎨</div>
-          <h3>Looks intentional</h3>
-          <p>A restrained color system and type scale so the page feels designed, not defaulted.</p>
-        </article>
-        <article class="feature-card">
-          <div class="feature-icon">🌓</div>
-          <h3>Light &amp; dark</h3>
-          <p>Toggle the theme in the top right — every color adapts, including the gradient glow.</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="how" class="how container">
-      <h2>How it works</h2>
-      <ol class="steps">
-        <li>
-          <span class="step-num">1</span>
-          <div>
-            <h3>Clone the repo</h3>
-            <p>Grab the source from GitHub and open <code>index.html</code> in a browser — no install required.</p>
-          </div>
-        </li>
-        <li>
-          <span class="step-num">2</span>
-          <div>
-            <h3>Customize it</h3>
-            <p>Swap the copy, colors, and sections in <code>styles.css</code> and <code>index.html</code> to fit your project.</p>
-          </div>
-        </li>
-        <li>
-          <span class="step-num">3</span>
-          <div>
-            <h3>Ship it</h3>
-            <p>Push to GitHub Pages, Netlify, or Vercel and it's live in minutes.</p>
-          </div>
-        </li>
-      </ol>
-    </section>
-
-    <section id="contact" class="contact container">
-      <div class="contact-card">
-        <h2>Like what you see?</h2>
-        <p>This is a static demo — the form below doesn't send anywhere, but it shows the interaction pattern.</p>
-        <form class="contact-form" id="contactForm">
-          <input type="email" placeholder="you@example.com" required aria-label="Email address" />
-          <button type="submit" class="btn btn-primary">Notify me</button>
-        </form>
-        <p class="form-note" id="formNote" aria-live="polite"></p>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <span>© <span id="year"></span> Aurora Demo. Built as a sample project.</span>
-      <a href="#top">Back to top ↑</a>
+  <main class="card">
+    <p class="eyebrow">Dummy demo app</p>
+    <h1>Pulse Counter</h1>
+    <p class="count" id="count">0</p>
+    <div class="btn-row">
+      <button class="tap" id="tapBtn">Tap +1</button>
+      <button class="reset" id="resetBtn">Reset</button>
     </div>
-  </footer>
-
+    <p class="hint">Also works with <kbd>Space</kbd>. Count is saved locally.</p>
+  </main>
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,44 +1,54 @@
-// Year in footer
-document.getElementById('year').textContent = new Date().getFullYear();
+const countEl = document.getElementById('count');
+const tapBtn = document.getElementById('tapBtn');
+const resetBtn = document.getElementById('resetBtn');
 
-// Theme toggle with persisted preference
-const root = document.documentElement;
-const toggleBtn = document.getElementById('themeToggle');
-
-function applyTheme(theme) {
-  root.setAttribute('data-theme', theme);
-  toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-}
-
-let stored = null;
+let count = 0;
 try {
-  stored = window.localStorage.getItem('aurora-theme');
+  const stored = window.localStorage.getItem('pulse-count');
+  if (stored !== null) count = parseInt(stored, 10) || 0;
 } catch (e) {
-  // localStorage unavailable (e.g. private browsing) — fall back silently
+  // localStorage unavailable — start from 0
 }
 
-const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-applyTheme(stored || (prefersDark ? 'dark' : 'light'));
+function render() {
+  countEl.textContent = count.toLocaleString();
+}
 
-toggleBtn.addEventListener('click', () => {
-  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  applyTheme(next);
+function persist() {
   try {
-    window.localStorage.setItem('aurora-theme', next);
+    window.localStorage.setItem('pulse-count', String(count));
   } catch (e) {
     // ignore storage failures
   }
+}
+
+function pulse() {
+  countEl.classList.remove('pulse');
+  // force reflow so the animation can re-trigger on rapid taps
+  void countEl.offsetWidth;
+  countEl.classList.add('pulse');
+}
+
+function increment() {
+  count += 1;
+  render();
+  persist();
+  pulse();
+}
+
+tapBtn.addEventListener('click', increment);
+
+resetBtn.addEventListener('click', () => {
+  count = 0;
+  render();
+  persist();
 });
 
-// Demo contact form — no backend, just a friendly confirmation
-const form = document.getElementById('contactForm');
-const note = document.getElementById('formNote');
-
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = form.querySelector('input').value.trim();
-  note.textContent = email
-    ? `Thanks — this is a demo, so nothing was actually sent for ${email}.`
-    : 'Enter an email to see the demo confirmation.';
-  form.reset();
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    increment();
+  }
 });
+
+render();
