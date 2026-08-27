@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aurora — Demo Site</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="#top">
+        <span class="brand-mark">✦</span> Aurora
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero container">
+      <p class="eyebrow">Now in demo preview</p>
+      <h1>A small idea,<br />presented beautifully.</h1>
+      <p class="hero-sub">
+        Aurora is a placeholder product page built to show a clean, modern
+        single-page layout — hero, features, process, and contact — all in
+        one lightweight static site.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#contact">Get started</a>
+        <a class="btn btn-ghost" href="#features">See features</a>
+      </div>
+    </section>
+
+    <section id="features" class="features container">
+      <h2>Why teams pick Aurora</h2>
+      <p class="section-sub">Three reasons this demo page exists.</p>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Fast by default</h3>
+          <p>No frameworks, no build step — just HTML, CSS, and a touch of JavaScript. Loads instantly.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3>Looks intentional</h3>
+          <p>A restrained color system and type scale so the page feels designed, not defaulted.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">🌓</div>
+          <h3>Light &amp; dark</h3>
+          <p>Toggle the theme in the top right — every color adapts, including the gradient glow.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="how" class="how container">
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li>
+          <span class="step-num">1</span>
+          <div>
+            <h3>Clone the repo</h3>
+            <p>Grab the source from GitHub and open <code>index.html</code> in a browser — no install required.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <div>
+            <h3>Customize it</h3>
+            <p>Swap the copy, colors, and sections in <code>styles.css</code> and <code>index.html</code> to fit your project.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <div>
+            <h3>Ship it</h3>
+            <p>Push to GitHub Pages, Netlify, or Vercel and it's live in minutes.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="contact" class="contact container">
+      <div class="contact-card">
+        <h2>Like what you see?</h2>
+        <p>This is a static demo — the form below doesn't send anywhere, but it shows the interaction pattern.</p>
+        <form class="contact-form" id="contactForm">
+          <input type="email" placeholder="you@example.com" required aria-label="Email address" />
+          <button type="submit" class="btn btn-primary">Notify me</button>
+        </form>
+        <p class="form-note" id="formNote" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Aurora Demo. Built as a sample project.</span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
