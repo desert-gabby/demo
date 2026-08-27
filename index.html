@@ -3,43 +3,149 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Concierge — AI Demo</title>
+  <title>Haven — Hotel Admin</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="chat-header">
-      <div class="avatar">✦</div>
-      <div class="header-text">
-        <h1>Concierge</h1>
-        <p class="status"><span class="dot"></span> Online — simulated demo</p>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">◆</span>
+        <span>Haven Admin</span>
       </div>
-    </header>
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">▦</span> Dashboard
+        </button>
+        <button class="nav-item" data-view="rooms">
+          <span class="nav-icon">▤</span> Rooms
+        </button>
+        <button class="nav-item" data-view="bookings">
+          <span class="nav-icon">▥</span> Bookings
+        </button>
+        <button class="nav-item" data-view="guests">
+          <span class="nav-icon">▧</span> Guests
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <p>Basic test build</p>
+        <button class="reset-data" id="resetData">Reset demo data</button>
+      </div>
+    </aside>
 
-    <main class="chat-window" id="chatWindow" aria-live="polite">
-      <!-- messages injected here -->
+    <main class="content">
+      <header class="topbar">
+        <h1 id="viewTitle">Dashboard</h1>
+        <div class="topbar-meta">
+          <span id="todayDate"></span>
+        </div>
+      </header>
+
+      <!-- Dashboard -->
+      <section class="view" id="view-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <p class="stat-label">Total rooms</p>
+            <p class="stat-value" id="statTotal">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Occupied</p>
+            <p class="stat-value" id="statOccupied">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Available</p>
+            <p class="stat-value" id="statAvailable">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Bookings today</p>
+            <p class="stat-value" id="statBookingsToday">0</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Room status overview</h2>
+          <div class="status-legend">
+            <span><i class="dot available"></i> Available</span>
+            <span><i class="dot occupied"></i> Occupied</span>
+            <span><i class="dot cleaning"></i> Cleaning</span>
+            <span><i class="dot maintenance"></i> Maintenance</span>
+          </div>
+          <div class="room-grid" id="dashboardRoomGrid"></div>
+        </div>
+      </section>
+
+      <!-- Rooms -->
+      <section class="view hidden" id="view-rooms">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>All rooms</h2>
+            <p class="hint">Click a room's status to cycle it.</p>
+          </div>
+          <div class="room-grid" id="roomsGrid"></div>
+        </div>
+      </section>
+
+      <!-- Bookings -->
+      <section class="view hidden" id="view-bookings">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>New booking</h2>
+          </div>
+          <form class="booking-form" id="bookingForm">
+            <input type="text" id="guestName" placeholder="Guest name" required />
+            <select id="roomSelect" required></select>
+            <input type="date" id="checkinDate" required />
+            <input type="date" id="checkoutDate" required />
+            <button type="submit" class="btn-primary">Add booking</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>All bookings</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Guest</th>
+                  <th>Room</th>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="bookingsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Guests -->
+      <section class="view hidden" id="view-guests">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Guests</h2>
+            <p class="hint">Derived from current bookings.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Room</th>
+                  <th>Stay</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="guestsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
-
-    <div class="quick-replies" id="quickReplies">
-      <button class="chip" data-msg="What time is check-in and check-out?">Check-in/out times</button>
-      <button class="chip" data-msg="Can you recommend a restaurant nearby?">Restaurant recs</button>
-      <button class="chip" data-msg="What's the wifi password?">Wifi password</button>
-      <button class="chip" data-msg="Can I book a spa appointment?">Book spa</button>
-    </div>
-
-    <form class="composer" id="composer">
-      <input
-        type="text"
-        id="messageInput"
-        placeholder="Ask the concierge anything…"
-        autocomplete="off"
-        aria-label="Message"
-      />
-      <button type="submit" class="send-btn" aria-label="Send message">➤</button>
-    </form>
-
-    <p class="disclaimer">Demo concierge — replies are simulated, not a real AI model.</p>
   </div>
 
   <script src="script.js"></script>
