@@ -10,7 +10,7 @@ const CITIES = [
 ];
 
 const AIRLINES = [
-  { code: 'SH', name: 'SkyHop Air' },
+  { code: 'SH', name: 'ReFlight Air' },
   { code: 'AV', name: 'Avion Blue' },
   { code: 'NR', name: 'Northern Wings' },
   { code: 'ZP', name: 'ZenPacific' },
