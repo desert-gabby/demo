@@ -3,150 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Haven — Hotel Admin</title>
+  <title>SkyHop — Flight Tickets</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <span class="brand-mark">◆</span>
-        <span>Haven Admin</span>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">✈</span> SkyHop</div>
+    <p class="tagline">Sample flight ticket demo — no real bookings</p>
+  </header>
+
+  <main class="wrap">
+    <!-- Step 1: Search -->
+    <section class="step" id="step-search">
+      <div class="card search-card">
+        <h1>Find your flight</h1>
+        <form id="searchForm" class="search-form">
+          <div class="field">
+            <label for="origin">From</label>
+            <select id="origin" required></select>
+          </div>
+          <div class="field swap-field">
+            <button type="button" id="swapBtn" class="swap-btn" aria-label="Swap origin and destination">⇄</button>
+          </div>
+          <div class="field">
+            <label for="destination">To</label>
+            <select id="destination" required></select>
+          </div>
+          <div class="field">
+            <label for="travelDate">Departure date</label>
+            <input type="date" id="travelDate" required />
+          </div>
+          <div class="field">
+            <label for="passengers">Passengers</label>
+            <select id="passengers">
+              <option value="1">1 passenger</option>
+              <option value="2">2 passengers</option>
+              <option value="3">3 passengers</option>
+              <option value="4">4 passengers</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary search-btn">Search flights</button>
+        </form>
       </div>
-      <nav class="nav">
-        <button class="nav-item active" data-view="dashboard">
-          <span class="nav-icon">▦</span> Dashboard
-        </button>
-        <button class="nav-item" data-view="rooms">
-          <span class="nav-icon">▤</span> Rooms
-        </button>
-        <button class="nav-item" data-view="bookings">
-          <span class="nav-icon">▥</span> Bookings
-        </button>
-        <button class="nav-item" data-view="guests">
-          <span class="nav-icon">▧</span> Guests
-        </button>
-      </nav>
-      <div class="sidebar-footer">
-        <p>Basic test build</p>
-        <button class="reset-data" id="resetData">Reset demo data</button>
+    </section>
+
+    <!-- Step 2: Results -->
+    <section class="step hidden" id="step-results">
+      <button class="back-link" data-back="step-search">← New search</button>
+      <h2 id="resultsTitle">Flights</h2>
+      <div class="results-list" id="resultsList"></div>
+    </section>
+
+    <!-- Step 3: Passenger details -->
+    <section class="step hidden" id="step-details">
+      <button class="back-link" data-back="step-results">← Back to results</button>
+      <div class="card">
+        <h2>Passenger details</h2>
+        <div class="flight-summary" id="flightSummary"></div>
+        <form id="detailsForm" class="details-form">
+          <div class="field">
+            <label for="fullName">Full name</label>
+            <input type="text" id="fullName" placeholder="As it appears on ID" required />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="you@example.com" required />
+          </div>
+          <div class="field">
+            <label for="seatPref">Seat preference</label>
+            <select id="seatPref">
+              <option value="window">Window</option>
+              <option value="aisle">Aisle</option>
+              <option value="middle">Middle</option>
+              <option value="none">No preference</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary">Confirm booking</button>
+        </form>
       </div>
-    </aside>
+    </section>
 
-    <main class="content">
-      <header class="topbar">
-        <h1 id="viewTitle">Dashboard</h1>
-        <div class="topbar-meta">
-          <span id="todayDate"></span>
-        </div>
-      </header>
-
-      <!-- Dashboard -->
-      <section class="view" id="view-dashboard">
-        <div class="stat-grid">
-          <div class="stat-card">
-            <p class="stat-label">Total rooms</p>
-            <p class="stat-value" id="statTotal">0</p>
-          </div>
-          <div class="stat-card">
-            <p class="stat-label">Occupied</p>
-            <p class="stat-value" id="statOccupied">0</p>
-          </div>
-          <div class="stat-card">
-            <p class="stat-label">Available</p>
-            <p class="stat-value" id="statAvailable">0</p>
-          </div>
-          <div class="stat-card">
-            <p class="stat-label">Bookings today</p>
-            <p class="stat-value" id="statBookingsToday">0</p>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>Room status overview</h2>
-          <div class="status-legend">
-            <span><i class="dot available"></i> Available</span>
-            <span><i class="dot occupied"></i> Occupied</span>
-            <span><i class="dot cleaning"></i> Cleaning</span>
-            <span><i class="dot maintenance"></i> Maintenance</span>
-          </div>
-          <div class="room-grid" id="dashboardRoomGrid"></div>
-        </div>
-      </section>
-
-      <!-- Rooms -->
-      <section class="view hidden" id="view-rooms">
-        <div class="panel">
-          <div class="panel-head">
-            <h2>All rooms</h2>
-            <p class="hint">Click a room's status to cycle it.</p>
-          </div>
-          <div class="room-grid" id="roomsGrid"></div>
-        </div>
-      </section>
-
-      <!-- Bookings -->
-      <section class="view hidden" id="view-bookings">
-        <div class="panel">
-          <div class="panel-head">
-            <h2>New booking</h2>
-          </div>
-          <form class="booking-form" id="bookingForm">
-            <input type="text" id="guestName" placeholder="Guest name" required />
-            <select id="roomSelect" required></select>
-            <input type="date" id="checkinDate" required />
-            <input type="date" id="checkoutDate" required />
-            <button type="submit" class="btn-primary">Add booking</button>
-          </form>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head">
-            <h2>All bookings</h2>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Guest</th>
-                  <th>Room</th>
-                  <th>Check-in</th>
-                  <th>Check-out</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="bookingsBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- Guests -->
-      <section class="view hidden" id="view-guests">
-        <div class="panel">
-          <div class="panel-head">
-            <h2>Guests</h2>
-            <p class="hint">Derived from current bookings.</p>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Room</th>
-                  <th>Stay</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="guestsBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+    <!-- Step 4: Ticket -->
+    <section class="step hidden" id="step-ticket">
+      <button class="back-link" data-back="step-search">← Book another flight</button>
+      <div class="ticket" id="ticketCard"></div>
+      <div class="ticket-actions">
+        <button class="btn-secondary" id="printTicket">Print / Save as PDF</button>
+      </div>
+    </section>
+  </main>
 
   <script src="script.js"></script>
 </body>

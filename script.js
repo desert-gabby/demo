@@ -1,207 +1,251 @@
-const STORAGE_KEY = 'haven-admin-state-v1';
+const CITIES = [
+  { code: 'DXB', name: 'Dubai' },
+  { code: 'LHR', name: 'London' },
+  { code: 'JFK', name: 'New York' },
+  { code: 'BCN', name: 'Barcelona' },
+  { code: 'MAD', name: 'Madrid' },
+  { code: 'SIN', name: 'Singapore' },
+  { code: 'CDG', name: 'Paris' },
+  { code: 'NRT', name: 'Tokyo' },
+];
 
-const ROOM_TYPES = ['Standard', 'Deluxe', 'Suite', 'Twin'];
-const STATUS_CYCLE = ['available', 'occupied', 'cleaning', 'maintenance'];
+const AIRLINES = [
+  { code: 'SH', name: 'SkyHop Air' },
+  { code: 'AV', name: 'Avion Blue' },
+  { code: 'NR', name: 'Northern Wings' },
+  { code: 'ZP', name: 'ZenPacific' },
+];
 
-function seedData() {
-  const rooms = [];
-  let n = 101;
-  for (let floor = 1; floor <= 3; floor++) {
-    for (let i = 0; i < 5; i++) {
-      const num = floor * 100 + i + 1;
-      rooms.push({
-        number: num,
-        type: ROOM_TYPES[(num + floor) % ROOM_TYPES.length],
-        status: i === 0 ? 'cleaning' : i === 4 ? 'maintenance' : 'available',
-      });
-    }
-  }
+let state = {
+  origin: null,
+  destination: null,
+  date: null,
+  passengers: 1,
+  selectedFlight: null,
+  passenger: null,
+};
 
-  const today = new Date();
-  const iso = (d) => d.toISOString().slice(0, 10);
-  const addDays = (d, days) => new Date(d.getTime() + days * 86400000);
+// --- Populate selects -----------------------------------------------
+const originSelect = document.getElementById('origin');
+const destinationSelect = document.getElementById('destination');
 
-  const bookings = [
-    { id: cryptoId(), guest: 'Amelia Torres', room: 102, checkin: iso(addDays(today, -1)), checkout: iso(addDays(today, 2)) },
-    { id: cryptoId(), guest: 'Kenji Watanabe', room: 205, checkin: iso(today), checkout: iso(addDays(today, 1)) },
-    { id: cryptoId(), guest: 'Priya Nair', room: 301, checkin: iso(addDays(today, 3)), checkout: iso(addDays(today, 5)) },
-  ];
-
-  // Mark rooms with active bookings as occupied
-  bookings.forEach((b) => {
-    if (b.checkin <= iso(today) && b.checkout >= iso(today)) {
-      const room = rooms.find((r) => r.number === b.room);
-      if (room) room.status = 'occupied';
-    }
-  });
-
-  return { rooms, bookings };
+function fillCitySelect(select, defaultIndex) {
+  select.innerHTML = CITIES.map((c, i) =>
+    `<option value="${c.code}" ${i === defaultIndex ? 'selected' : ''}>${c.name} (${c.code})</option>`
+  ).join('');
 }
 
-function cryptoId() {
-  return 'b' + Math.random().toString(36).slice(2, 10);
-}
+fillCitySelect(originSelect, 0);
+fillCitySelect(destinationSelect, 3);
 
-function loadState() {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    // fall through to fresh seed
-  }
-  const fresh = seedData();
-  saveState(fresh);
-  return fresh;
-}
-
-function saveState(state) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    // ignore storage failures (e.g. private browsing)
-  }
-}
-
-let state = loadState();
-
-// --- Navigation ------------------------------------------------------
-const navItems = document.querySelectorAll('.nav-item');
-const views = document.querySelectorAll('.view');
-const viewTitle = document.getElementById('viewTitle');
-
-navItems.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    navItems.forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    const target = btn.dataset.view;
-    views.forEach((v) => v.classList.toggle('hidden', v.id !== `view-${target}`));
-    viewTitle.textContent = btn.textContent.trim();
-    renderAll();
-  });
+document.getElementById('swapBtn').addEventListener('click', () => {
+  const a = originSelect.value;
+  originSelect.value = destinationSelect.value;
+  destinationSelect.value = a;
 });
 
-document.getElementById('todayDate').textContent = new Date().toLocaleDateString(undefined, {
-  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+// Default date: 14 days from now
+const dateInput = document.getElementById('travelDate');
+const defaultDate = new Date(Date.now() + 14 * 86400000);
+dateInput.value = defaultDate.toISOString().slice(0, 10);
+dateInput.min = new Date().toISOString().slice(0, 10);
+
+// --- Step navigation ----------------------------------------------------
+function showStep(id) {
+  document.querySelectorAll('.step').forEach((s) => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.querySelectorAll('[data-back]').forEach((btn) => {
+  btn.addEventListener('click', () => showStep(btn.dataset.back));
 });
 
-// --- Rendering ---------------------------------------------------------
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+// --- Deterministic sample flight generation ------------------------------
+function seededRandom(seed) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
 }
 
-function isActiveBooking(b) {
-  const t = todayIso();
-  return b.checkin <= t && b.checkout >= t;
+function hashStr(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) || 1;
 }
 
-function bookingStatus(b) {
-  const t = todayIso();
-  if (b.checkout < t) return 'past';
-  if (b.checkin > t) return 'upcoming';
-  return 'active';
+function generateFlights(originCode, destCode, dateStr) {
+  const rand = seededRandom(hashStr(`${originCode}-${destCode}-${dateStr}`));
+  const count = 3 + Math.floor(rand() * 3); // 3-5 flights
+  const flights = [];
+
+  for (let i = 0; i < count; i++) {
+    const airline = AIRLINES[Math.floor(rand() * AIRLINES.length)];
+    const depHour = 5 + Math.floor(rand() * 17);
+    const depMin = Math.floor(rand() * 12) * 5;
+    const durationMin = 90 + Math.floor(rand() * 600);
+    const price = 120 + Math.floor(rand() * 780);
+
+    const dep = new Date(`${dateStr}T00:00:00`);
+    dep.setHours(depHour, depMin);
+    const arr = new Date(dep.getTime() + durationMin * 60000);
+
+    flights.push({
+      id: `${airline.code}${100 + Math.floor(rand() * 900)}`,
+      airline,
+      depTime: dep,
+      arrTime: arr,
+      durationMin,
+      price,
+      stops: rand() > 0.7 ? 1 : 0,
+    });
+  }
+
+  return flights.sort((a, b) => a.depTime - b.depTime);
 }
 
-function renderStats() {
-  const total = state.rooms.length;
-  const occupied = state.rooms.filter((r) => r.status === 'occupied').length;
-  const available = state.rooms.filter((r) => r.status === 'available').length;
-  const bookingsToday = state.bookings.filter(isActiveBooking).length;
-
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statOccupied').textContent = occupied;
-  document.getElementById('statAvailable').textContent = available;
-  document.getElementById('statBookingsToday').textContent = bookingsToday;
+function fmtTime(d) {
+  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-function roomCardHtml(room) {
-  return `
-    <div class="room-card" data-room="${room.number}">
-      <p class="room-number">Room ${room.number}</p>
-      <p class="room-type">${room.type}</p>
-      <span class="room-status ${room.status}">${capitalize(room.status)}</span>
+function fmtDuration(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h ${m.toString().padStart(2, '0')}m`;
+}
+
+function cityName(code) {
+  return CITIES.find((c) => c.code === code)?.name || code;
+}
+
+// --- Search --------------------------------------------------------------
+document.getElementById('searchForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  state.origin = originSelect.value;
+  state.destination = destinationSelect.value;
+  state.date = dateInput.value;
+  state.passengers = document.getElementById('passengers').value;
+
+  if (state.origin === state.destination) {
+    alert('Please choose two different cities.');
+    return;
+  }
+
+  renderResults();
+  showStep('step-results');
+});
+
+function renderResults() {
+  document.getElementById('resultsTitle').textContent =
+    `${cityName(state.origin)} → ${cityName(state.destination)} · ${formatDateLong(state.date)}`;
+
+  const flights = generateFlights(state.origin, state.destination, state.date);
+  const list = document.getElementById('resultsList');
+  list.innerHTML = flights.map((f) => `
+    <div class="flight-card" data-id="${f.id}">
+      <div class="airline-badge">${f.airline.code}</div>
+      <div class="flight-mid">
+        <div class="flight-route">
+          ${fmtTime(f.depTime)} <span class="arrow">→</span> ${fmtTime(f.arrTime)}
+        </div>
+        <p class="flight-meta">${f.airline.name} · ${f.id} · ${fmtDuration(f.durationMin)} · ${f.stops === 0 ? 'Nonstop' : f.stops + ' stop'}</p>
+      </div>
+      <div class="flight-price">$${f.price}<span>per passenger</span></div>
     </div>
+  `).join('');
+
+  list.querySelectorAll('.flight-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const flight = flights.find((f) => f.id === card.dataset.id);
+      state.selectedFlight = flight;
+      renderFlightSummary();
+      showStep('step-details');
+    });
+  });
+}
+
+function formatDateLong(dateStr) {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+  });
+}
+
+function renderFlightSummary() {
+  const f = state.selectedFlight;
+  document.getElementById('flightSummary').innerHTML = `
+    <strong>${cityName(state.origin)} → ${cityName(state.destination)}</strong>
+    ${f.airline.name} ${f.id} · ${formatDateLong(state.date)} · ${fmtTime(f.depTime)}–${fmtTime(f.arrTime)}
+    · $${f.price} × ${state.passengers} passenger${state.passengers > 1 ? 's' : ''} =
+    <strong>$${f.price * state.passengers}</strong>
   `;
 }
 
-function capitalize(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+// --- Passenger details -> ticket -----------------------------------------
+document.getElementById('detailsForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  state.passenger = {
+    name: document.getElementById('fullName').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    seat: document.getElementById('seatPref').value,
+  };
+  renderTicket();
+  showStep('step-ticket');
+});
+
+function generatePNR(seedStr) {
+  const rand = seededRandom(hashStr(seedStr + Date.now()));
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < 6; i++) out += chars[Math.floor(rand() * chars.length)];
+  return out;
 }
 
-function renderRoomGrids() {
-  const html = state.rooms.map(roomCardHtml).join('');
-  document.getElementById('dashboardRoomGrid').innerHTML = html;
-  document.getElementById('roomsGrid').innerHTML = html;
-}
+function renderTicket() {
+  const f = state.selectedFlight;
+  const p = state.passenger;
+  const pnr = generatePNR(p.name + p.email);
+  const seatNumber = 10 + Math.floor(Math.random() * 20);
+  const seatLetter = ['A', 'B', 'C', 'D', 'E', 'F'][Math.floor(Math.random() * 6)];
 
-function attachRoomClickHandlers() {
-  document.querySelectorAll('.room-card').forEach((card) => {
-    card.addEventListener('click', () => {
-      const num = parseInt(card.dataset.room, 10);
-      const room = state.rooms.find((r) => r.number === num);
-      if (!room) return;
-      const idx = STATUS_CYCLE.indexOf(room.status);
-      room.status = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
-      saveState(state);
-      renderAll();
-    });
-  });
-}
-
-function renderRoomSelect() {
-  const select = document.getElementById('roomSelect');
-  select.innerHTML = state.rooms
-    .map((r) => `<option value="${r.number}">Room ${r.number} — ${r.type}</option>`)
-    .join('');
-}
-
-function renderBookingsTable() {
-  const body = document.getElementById('bookingsBody');
-  if (!state.bookings.length) {
-    body.innerHTML = `<tr class="empty-row"><td colspan="6">No bookings yet.</td></tr>`;
-    return;
-  }
-  body.innerHTML = state.bookings
-    .slice()
-    .sort((a, b) => a.checkin.localeCompare(b.checkin))
-    .map((b) => `
-      <tr>
-        <td>${escapeHtml(b.guest)}</td>
-        <td>${b.room}</td>
-        <td>${b.checkin}</td>
-        <td>${b.checkout}</td>
-        <td><span class="badge ${bookingStatus(b)}">${capitalize(bookingStatus(b))}</span></td>
-        <td><button class="btn-link" data-remove="${b.id}">Remove</button></td>
-      </tr>
-    `)
-    .join('');
-
-  body.querySelectorAll('[data-remove]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      state.bookings = state.bookings.filter((b) => b.id !== btn.dataset.remove);
-      saveState(state);
-      renderAll();
-    });
-  });
-}
-
-function renderGuestsTable() {
-  const body = document.getElementById('guestsBody');
-  if (!state.bookings.length) {
-    body.innerHTML = `<tr class="empty-row"><td colspan="4">No guests yet.</td></tr>`;
-    return;
-  }
-  body.innerHTML = state.bookings
-    .slice()
-    .sort((a, b) => a.checkin.localeCompare(b.checkin))
-    .map((b) => `
-      <tr>
-        <td>${escapeHtml(b.guest)}</td>
-        <td>${b.room}</td>
-        <td>${b.checkin} → ${b.checkout}</td>
-        <td><span class="badge ${bookingStatus(b)}">${capitalize(bookingStatus(b))}</span></td>
-      </tr>
-    `)
-    .join('');
+  document.getElementById('ticketCard').innerHTML = `
+    <div class="ticket-head">
+      <p class="airline-name">${f.airline.name} · Boarding Pass</p>
+      <div class="ticket-route">
+        <div>
+          <div class="city">${state.origin}</div>
+          <div class="code">${cityName(state.origin)}</div>
+        </div>
+        <div class="plane">✈</div>
+        <div style="text-align:right">
+          <div class="city">${state.destination}</div>
+          <div class="code">${cityName(state.destination)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="ticket-body">
+      <div class="ticket-grid">
+        <div class="ticket-field"><span class="k">Passenger</span><span class="v">${escapeHtml(p.name)}</span></div>
+        <div class="ticket-field"><span class="k">Flight</span><span class="v">${f.id}</span></div>
+        <div class="ticket-field"><span class="k">Date</span><span class="v">${formatDateLong(state.date)}</span></div>
+        <div class="ticket-field"><span class="k">Departs</span><span class="v">${fmtTime(f.depTime)}</span></div>
+        <div class="ticket-field"><span class="k">Arrives</span><span class="v">${fmtTime(f.arrTime)}</span></div>
+        <div class="ticket-field"><span class="k">Seat</span><span class="v">${seatNumber}${seatLetter} (${p.seat === 'none' ? 'any' : p.seat})</span></div>
+      </div>
+      <div class="ticket-perf"></div>
+      <div class="ticket-grid">
+        <div class="ticket-field"><span class="k">Confirmation</span><span class="v">${pnr}</span></div>
+        <div class="ticket-field"><span class="k">Passengers</span><span class="v">${state.passengers}</span></div>
+        <div class="ticket-field"><span class="k">Total paid</span><span class="v">$${f.price * state.passengers}</span></div>
+      </div>
+      <div class="barcode"></div>
+      <p class="pnr-note">This is a sample/demo ticket — not a real booking.</p>
+    </div>
+  `;
 }
 
 function escapeHtml(str) {
@@ -210,47 +254,4 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function renderAll() {
-  renderStats();
-  renderRoomGrids();
-  attachRoomClickHandlers();
-  renderRoomSelect();
-  renderBookingsTable();
-  renderGuestsTable();
-}
-
-// --- Booking form --------------------------------------------------------
-document.getElementById('bookingForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const guest = document.getElementById('guestName').value.trim();
-  const room = parseInt(document.getElementById('roomSelect').value, 10);
-  const checkin = document.getElementById('checkinDate').value;
-  const checkout = document.getElementById('checkoutDate').value;
-
-  if (!guest || !room || !checkin || !checkout) return;
-  if (checkout < checkin) {
-    alert('Check-out date must be after check-in date.');
-    return;
-  }
-
-  state.bookings.push({ id: cryptoId(), guest, room, checkin, checkout });
-
-  const roomObj = state.rooms.find((r) => r.number === room);
-  if (roomObj && isActiveBooking({ checkin, checkout })) {
-    roomObj.status = 'occupied';
-  }
-
-  saveState(state);
-  e.target.reset();
-  renderAll();
-});
-
-// --- Reset demo data -----------------------------------------------------
-document.getElementById('resetData').addEventListener('click', () => {
-  if (!confirm('Reset all demo data back to the initial sample set?')) return;
-  state = seedData();
-  saveState(state);
-  renderAll();
-});
-
-renderAll();
+document.getElementById('printTicket').addEventListener('click', () => window.print());
